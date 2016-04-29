@@ -1,9 +1,16 @@
 import openpyxl as px
 import numpy as np
-from random import randint
+from random import randint, random
 import math
 import matplotlib.pyplot as plt
 import operator
+
+# Global variables
+N = 100
+TOURNAMENT_SIZE = 10
+GENERATIONS = 10
+EPSILON = 0.99
+MUTATION_RATE = 0.1
 
 # a class containing the cost and distance matrices
 class Data:
@@ -59,6 +66,16 @@ class EaType:
             tourCost += data.cost[max(self.phenotype[i], self.phenotype[i+1])][min(self.phenotype[i], self.phenotype[i+1])]
         return tourDist, tourCost
 
+    def mutation(self):
+        for i in range(len(self.genotype)):
+            if random() < MUTATION_RATE:
+                index = randint(0, len(self.genotype)-1)
+                temp = self.genotype[i]
+                self.genotype[i] = self.genotype[index]
+                self.genotype[index] = temp
+
+
+
 
 class Population:
     def __init__(self, data, size):
@@ -80,7 +97,8 @@ class Population:
         return bestDistEa, bestCostEa
 
     def plotPopulation(self):
-        fig = plt.gcf()
+        # plt.figure()
+        plt.axis([0, 180000, 0, 2000])
         for eaType in self.population:
             if self.isParetoOptimal(eaType):
                 plt.plot(eaType.dist, eaType.cost, 'ro')
@@ -88,10 +106,16 @@ class Population:
                 plt.plot(eaType.dist, eaType.cost, 'bo')
         plt.xlabel('Distance')
         plt.ylabel('Cost')
+        # plt.draw()
+        # plt.pause(0.001)
+        plt.plot()
+        plt.show()
+        # input("Press [enter] to continue.")
+
         # plt.xlim([0, 10])
         # plt.ylim([0, 10])
-        plt.grid()
-        plt.show()
+        # plt.grid()
+        # plt.show(block=False)
 
     def isParetoOptimal(self, testEaType):
         for eaType in self.population:
@@ -141,30 +165,63 @@ class Population:
                 elif obj == 'cost':
                     sortedF[i].crowdDist += (sortedF[i+1].cost-sortedF[i-1].cost)/(sortedF[-1].cost-sortedF[0].cost)
 
+    def makeNewPop(self, data):
+        nextGen = []
+        for i in range(N):
+            parent1 = self.tournament()
+            parent2 = self.tournament()
+            baby = EaType(data)
+            baby.genotype = []
+            for i in range(randint(1, len(parent1.genotype)-2)):
+                baby.genotype.append(parent1.genotype[i])
+            i = 0
+            while len(baby.genotype) < len(parent2.genotype)-1:
+                if parent2.genotype[i] not in baby.genotype:
+                    baby.genotype.append(parent2.genotype[i])
+                i += 1
+            baby.genotype.append(baby.genotype[0])
+            baby.mutation()
+            baby.phenotype = baby.genotype
+            nextGen.append(baby)
+        return nextGen
+
+    def tournament(self):
+        contestants = []
+        for i in range(TOURNAMENT_SIZE):
+            contestants.append(self.population[randint(0, N-1)])
+        if random() > EPSILON:
+            return contestants[randint(0, TOURNAMENT_SIZE-1)]
+        else:
+            return getFittest(contestants)
+
+
+def getFittest(contestants):
+    best = contestants[0]
+    # finds the eaTypes with best rank
+    bestRank = float("inf")
+    for eaType in contestants:
+        if eaType.rank < bestRank:
+            bestRank = eaType.rank
+            elite = []
+            elite.append(eaType)
+        elif eaType.rank == bestRank:
+            elite.append(eaType)
+    # finds the biggest crowd distance given the best rank
+    bestCrowdDist = 0
+    for eaType in elite:
+        if eaType.crowdDist > bestCrowdDist:
+            bestCrowdDist = eaType.crowdDist
+            best = eaType
+    return best
+
 
 def main():
     data = Data()
-    population = Population(data, 10)
-    distEa, costEa = population.bestFitness()
-    print(distEa.dist, distEa.cost)
-    print(costEa.dist, costEa.cost)
-    F = population.nonDomSort()
-    print("Before")
-    for type in F[0]:
-        print(type.crowdDist)
-    population.crowdingDist(F)
-    print("After")
-    for type in F[0]:
-        print(type.crowdDist)
-    population.plotPopulation()
-
-def tempMain():
-    N = 10
-    data = Data()
     population = Population(data, N)
-    nextGen = Population(data, N)
-    for i in range(10):
-        population.population += nextGen.population
+    population.nonDomSort()
+    nextGen = population.makeNewPop(data)
+    for generation in range(GENERATIONS):
+        population.population += nextGen
         F = population.nonDomSort()
         population = Population(data, 0)
         i = 1
@@ -177,7 +234,9 @@ def tempMain():
         while len(population.population) < N:
             population.population.append(sortedF[j])
             j += 1
+        # if generation%10 == 0:
         population.plotPopulation()
-        nextGen = Population(data, N)
+        nextGen = population.makeNewPop(data)
+    # population.plotPopulation()
 
-tempMain()
+main()
