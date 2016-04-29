@@ -7,10 +7,11 @@ import operator
 
 # Global variables
 N = 100
-TOURNAMENT_SIZE = 10
-GENERATIONS = 10
+TOURNAMENT_SIZE = 50
+GENERATIONS = 1000
 EPSILON = 0.99
-MUTATION_RATE = 0.1
+MUTATION_RATE = 0.01
+
 
 # a class containing the cost and distance matrices
 class Data:
@@ -67,14 +68,12 @@ class EaType:
         return tourDist, tourCost
 
     def mutation(self):
-        for i in range(len(self.genotype)):
+        for i in range(1, len(self.genotype)-1):
             if random() < MUTATION_RATE:
-                index = randint(0, len(self.genotype)-1)
+                index = randint(1, len(self.genotype)-2)
                 temp = self.genotype[i]
                 self.genotype[i] = self.genotype[index]
                 self.genotype[index] = temp
-
-
 
 
 class Population:
@@ -96,8 +95,7 @@ class Population:
                 bestCostEa = eaType
         return bestDistEa, bestCostEa
 
-    def plotPopulation(self):
-        # plt.figure()
+    def plotPopulation(self, end=False):
         plt.axis([0, 180000, 0, 2000])
         for eaType in self.population:
             if self.isParetoOptimal(eaType):
@@ -106,11 +104,13 @@ class Population:
                 plt.plot(eaType.dist, eaType.cost, 'bo')
         plt.xlabel('Distance')
         plt.ylabel('Cost')
-        # plt.draw()
-        # plt.pause(0.001)
+        plt.draw()
+        plt.pause(0.001)
         plt.plot()
         plt.show()
-        # input("Press [enter] to continue.")
+        if end:
+            input("Press [enter] to end.")
+        plt.clf()
 
         # plt.xlim([0, 10])
         # plt.ylim([0, 10])
@@ -176,6 +176,10 @@ class Population:
                 baby.genotype.append(parent1.genotype[i])
             i = 0
             while len(baby.genotype) < len(parent2.genotype)-1:
+                if i == 49:
+                    print(i, len(parent2.genotype), len(baby.genotype))
+                    print(parent2.genotype)
+                    print(baby.genotype)
                 if parent2.genotype[i] not in baby.genotype:
                     baby.genotype.append(parent2.genotype[i])
                 i += 1
@@ -216,6 +220,8 @@ def getFittest(contestants):
 
 
 def main():
+    plt.ion()
+    plt.show()
     data = Data()
     population = Population(data, N)
     population.nonDomSort()
@@ -237,6 +243,14 @@ def main():
         # if generation%10 == 0:
         population.plotPopulation()
         nextGen = population.makeNewPop(data)
-    # population.plotPopulation()
+        if generation % 10 == 0:
+            print("Generation:", generation, "of", GENERATIONS)
+    F = population.nonDomSort()
+    sortedF = sorted(F[0], key=operator.attrgetter('dist'))
+    for eaType in sortedF:
+        print(eaType.dist, eaType.cost)
+    population.plotPopulation(True)
+
+
 
 main()
