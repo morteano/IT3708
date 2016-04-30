@@ -8,7 +8,7 @@ import operator
 # Global variables
 N = 100
 TOURNAMENT_SIZE = 50
-GENERATIONS = 1000
+GENERATIONS = 100
 EPSILON = 0.99
 MUTATION_RATE = 0.01
 
@@ -75,6 +75,13 @@ class EaType:
                 self.genotype[i] = self.genotype[index]
                 self.genotype[index] = temp
 
+    def isDominating(self, otherEaType):
+        # TODO fix this function!!!!!
+        if self.dist <= otherEaType.dist and self.cost <= otherEaType.cost:
+            if self.dist < otherEaType.dist or self.cost < otherEaType.cost:
+                return True
+        return False
+
 
 class Population:
     def __init__(self, data, size):
@@ -130,9 +137,9 @@ class Population:
             eaType.dominates = []
             eaType.n = 0
             for otherEaType in self.population:
-                if eaType.dist < otherEaType.dist and eaType.cost < otherEaType.cost:
-                    eaType.dominates.append(otherEaType)
-                elif eaType.dist > otherEaType.dist and eaType.cost > otherEaType.cost:
+                if eaType.isDominating(otherEaType):
+                        eaType.dominates.append(otherEaType)
+                elif otherEaType.isDominating(eaType):
                     eaType.n += 1
             if eaType.n == 0:
                 eaType.rank = 1
@@ -219,6 +226,21 @@ def getFittest(contestants):
     return best
 
 
+def printAsVectors(F):
+    xString = "plotx = ["
+    yString = "ploty = ["
+    for i in range(len(F)):
+        xString += str(F[i].dist)
+        yString += str(F[i].cost)
+        if i == len(F)-1:
+            xString += "]"
+            yString += "]"
+        else:
+            xString += ", "
+            yString += ", "
+    print(xString)
+    print(yString)
+
 def main():
     plt.ion()
     plt.show()
@@ -228,6 +250,7 @@ def main():
     nextGen = population.makeNewPop(data)
     for generation in range(GENERATIONS):
         population.population += nextGen
+        population.plotPopulation()
         F = population.nonDomSort()
         population = Population(data, 0)
         i = 1
@@ -241,14 +264,14 @@ def main():
             population.population.append(sortedF[j])
             j += 1
         # if generation%10 == 0:
-        population.plotPopulation()
+        # population.plotPopulation()
         nextGen = population.makeNewPop(data)
         if generation % 10 == 0:
             print("Generation:", generation, "of", GENERATIONS)
-    F = population.nonDomSort()
-    sortedF = sorted(F[0], key=operator.attrgetter('dist'))
-    for eaType in sortedF:
-        print(eaType.dist, eaType.cost)
+    # F = population.nonDomSort()
+    # sortedF = sorted(F[0], key=operator.attrgetter('dist'))
+    # printAsVectors(sortedF)
+    population.population += nextGen
     population.plotPopulation(True)
 
 
