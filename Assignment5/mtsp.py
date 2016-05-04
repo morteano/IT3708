@@ -249,8 +249,8 @@ def main():
     population.nonDomSort()
     nextGen = population.makeNewPop(data)
     for generation in range(GENERATIONS):
-        population.population += nextGen
         population.plotPopulation()
+        population.population += nextGen
         F = population.nonDomSort()
         population = Population(data, 0)
         i = 1
