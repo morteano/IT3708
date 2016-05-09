@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import operator
 
 # Global variables
-N = 100
-TOURNAMENT_SIZE = 50
-GENERATIONS = 100
-EPSILON = 0.99
-MUTATION_RATE = 0.01
+N=100
+TOURNAMENT_SIZE=50
+GENERATIONS=100
+EPSILON=0.9
+MUTATION_RATE=0.05
 
 
 # a class containing the cost and distance matrices
@@ -103,13 +103,15 @@ class Population:
 
     def plotPopulation(self, end=False):
         plt.clf()
-        plt.axis([15000, 250000, 1000, 2500])
+        plt.axis([100000, 250000, 1000, 2500])
         minDist = float("inf")
         maxDist = 0
         minCost = float("inf")
         maxCost = 0
+        nonDom = 0
         for eaType in self.population:
             if self.isParetoOptimal(eaType):
+                nonDom += 1
                 plt.plot(eaType.dist, eaType.cost, 'ro')
             else:
                 plt.plot(eaType.dist, eaType.cost, 'bo')
@@ -136,6 +138,7 @@ class Population:
         plt.plot()
         plt.show()
         if end:
+            print("Nr of non-dominated:", nonDom)
             input("Press [enter] to continue.")
         plt.clf()
 
@@ -290,8 +293,26 @@ def main():
             print("Generation:", generation, "of", GENERATIONS)
     # F = population.nonDomSort()
     # sortedF = sorted(F[0], key=operator.attrgetter('dist'))
-    # printAsVectors(sortedF)
     population.population += nextGen
+    worstDist = 0
+    worstCost = 0
+    bestDist = float("inf")
+    bestCost = float("inf")
+    for eaType in population.population:
+        if eaType.dist > worstDist:
+            worstDist = eaType.dist
+        if eaType.dist < bestDist:
+            bestDist = eaType.dist
+        if eaType.cost > worstCost:
+            worstCost = eaType.cost
+        if eaType.cost < bestCost:
+            bestCost = eaType.cost
+    print("Best dist:", bestDist)
+    print("Best cost:", bestCost)
+    print("Worst dist:", worstDist)
+    print("Worst cost:", worstCost)
+    sortedF = population.nonDomSort()[0]
+    printAsVectors(sortedF)
     population.plotPopulation(True)
     population.population = sortedF
     population.plotPopulation(True)
