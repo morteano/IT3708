@@ -76,7 +76,6 @@ class EaType:
                 self.genotype[index] = temp
 
     def isDominating(self, otherEaType):
-        # TODO fix this function!!!!!
         if self.dist <= otherEaType.dist and self.cost <= otherEaType.cost:
             if self.dist < otherEaType.dist or self.cost < otherEaType.cost:
                 return True
@@ -103,12 +102,33 @@ class Population:
         return bestDistEa, bestCostEa
 
     def plotPopulation(self, end=False):
-        plt.axis([0, 180000, 0, 2000])
+        plt.clf()
+        plt.axis([15000, 250000, 1000, 2500])
+        minDist = float("inf")
+        maxDist = 0
+        minCost = float("inf")
+        maxCost = 0
         for eaType in self.population:
             if self.isParetoOptimal(eaType):
                 plt.plot(eaType.dist, eaType.cost, 'ro')
             else:
                 plt.plot(eaType.dist, eaType.cost, 'bo')
+            if eaType.dist < minDist:
+                minDist = eaType.dist
+                minDistCost = eaType.cost
+            if eaType.dist > maxDist:
+                maxDist = eaType.dist
+                maxDistCost = eaType.cost
+            if eaType.cost < minCost:
+                minCost = eaType.cost
+                minCostDist = eaType.dist
+            if eaType.cost > maxCost:
+                maxCost = eaType.cost
+                maxCostDist = eaType.dist
+        plt.plot(minDist, minDistCost, 'mo')
+        plt.plot(minCostDist, minCost, 'mo')
+        plt.plot(maxDist, maxDistCost, 'go')
+        plt.plot(maxCostDist, maxCost, 'go')
         plt.xlabel('Distance')
         plt.ylabel('Cost')
         plt.draw()
@@ -116,7 +136,7 @@ class Population:
         plt.plot()
         plt.show()
         if end:
-            input("Press [enter] to end.")
+            input("Press [enter] to continue.")
         plt.clf()
 
         # plt.xlim([0, 10])
@@ -249,8 +269,8 @@ def main():
     population.nonDomSort()
     nextGen = population.makeNewPop(data)
     for generation in range(GENERATIONS):
-        population.plotPopulation()
         population.population += nextGen
+        population.plotPopulation()
         F = population.nonDomSort()
         population = Population(data, 0)
         i = 1
@@ -272,6 +292,8 @@ def main():
     # sortedF = sorted(F[0], key=operator.attrgetter('dist'))
     # printAsVectors(sortedF)
     population.population += nextGen
+    population.plotPopulation(True)
+    population.population = sortedF
     population.plotPopulation(True)
 
 
