@@ -6,12 +6,13 @@ import matplotlib.pyplot as plt
 import operator
 
 # Global variables
-N=100
-TOURNAMENT_SIZE=50
-GENERATIONS=100
-EPSILON=0.9
-MUTATION_RATE=0.05
+N=60
+GENERATIONS=30
+CROSSOVER_RATE = 0.6
+MUTATION_RATE=0.1
 
+TOURNAMENT_SIZE=50
+EPSILON=0.9
 
 # a class containing the cost and distance matrices
 class Data:
@@ -202,18 +203,21 @@ class Population:
             parent2 = self.tournament()
             baby = EaType(data)
             baby.genotype = []
-            for i in range(randint(1, len(parent1.genotype)-2)):
-                baby.genotype.append(parent1.genotype[i])
-            i = 0
-            while len(baby.genotype) < len(parent2.genotype)-1:
-                if i == 49:
-                    print(i, len(parent2.genotype), len(baby.genotype))
-                    print(parent2.genotype)
-                    print(baby.genotype)
-                if parent2.genotype[i] not in baby.genotype:
-                    baby.genotype.append(parent2.genotype[i])
-                i += 1
-            baby.genotype.append(baby.genotype[0])
+            if random() < CROSSOVER_RATE:
+                for i in range(randint(1, len(parent1.genotype)-2)):
+                    baby.genotype.append(parent1.genotype[i])
+                i = 0
+                while len(baby.genotype) < len(parent2.genotype)-1:
+                    if i == 49:
+                        print(i, len(parent2.genotype), len(baby.genotype))
+                        print(parent2.genotype)
+                        print(baby.genotype)
+                    if parent2.genotype[i] not in baby.genotype:
+                        baby.genotype.append(parent2.genotype[i])
+                    i += 1
+                baby.genotype.append(baby.genotype[0])
+            else:
+                baby.genotype = parent1.genotype
             baby.mutation()
             baby.phenotype = baby.genotype
             nextGen.append(baby)
